@@ -5,6 +5,8 @@ import bcrypt from 'bcrypt'
 import User from './Shema/User.js';
 import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken'
+import cors from 'cors'//avoid to call  default localhost port number 
+
 
 
 const server=express();
@@ -15,9 +17,11 @@ let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/; // regex for e
 let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/; // regex for password
 
 server.use(express.json());
+server.use(cors())
 
 mongoose.connect(process.env.DB_LOCATION,{
     autoIndex:true
+    
 })
 
 
@@ -62,6 +66,9 @@ server.post("/signup",(req,res)=>{
     if(!passwordRegex.test(password)){
         return res.status(403).json({"error":"password should be 6 to 20 charchters long with a numeric ,1 lowercase and 1 upercase letterss"})
     }
+
+
+
     bcrypt.hash(password,10,async (err,hashed_password)=>{
 
         let username= await generateUsername(email);
