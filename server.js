@@ -5,12 +5,31 @@ import bcrypt from 'bcrypt'
 import User from './Shema/User.js';
 import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken'
-import cors from 'cors'//avoid to call  default localhost port number 
+import cors from 'cors'//avoid to call  default localhost port number
+
+
+import admin from 'firebase-admin';
+import serviceAccountKey from './myblog-mearn-stack-firebase-adminsdk-cl2ul-9eaf637df1.json' assert { type: "json" };
+import { getAuth } from 'firebase-admin/auth';
+
 
 
 
 const server=express();
 let PORT=3000;
+
+//google authentication
+admin.initializeApp({
+    
+    credential:admin.credential.cert(serviceAccountKey)
+
+
+})
+
+
+
+
+
 
 
 let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/; // regex for email
@@ -32,6 +51,7 @@ const generateUsername=async (email)=>{
     let isUsernameNotUnique=await User.exists({"personal_info":username}).then((result)=>result);
      isUsernameNotUnique ? username+=nanoid().substring(0,5):"";
     return username;
+    
 }
 
 
@@ -51,6 +71,7 @@ const formatDataSend=(user)=>{
 
 
 server.post("/signup",(req,res)=>{
+    
     
     let {fullname,password,email}=req.body;
 
@@ -87,7 +108,7 @@ server.post("/signup",(req,res)=>{
             }
             return res.status(500).json({"error":err.message})
         })
-        console.log(hashed_password)
+        // console.log(hashed_password)
     })
     
    
@@ -136,6 +157,59 @@ server.post("/signin",(req,res)=>{
     })
 })
 
+
+
+//google authentiaction
+
+server.post("/google-auth",async (req,res)=>{
+
+    let {access_token}=req.body;
+
+    getAuth().verifyIdToken(access_token)
+    .then(async(decodeUser)=>{
+        
+
+        let {email,name,picture}=decodeUser;
+        picture =picture.replace("s96-c","s384-c")
+        
+        let user=await User.findOne({"personal_info.email":email})
+        .select(
+            "personal_info.fullname personal_info.username personal_info.profile_img google_auth"
+        ).then((u)=>{
+            return u || null
+        })
+        .catch(err=>{
+            return res.status(500).json({"error":err.message})
+        })
+        console.log(user)
+        if(user){//login
+            // if(!user.google_auth){
+            //     return res.status(403).json({"error":"This email was signed up without google.please log in with password to access the account"})
+            // }
+        }else{//signup
+            
+            let username=await generateUsername(email)
+
+            user=new User({
+                personal_info:{fullname:name ,email,profile_img:picture,username},
+                google_auth:true
+            })
+            await user.save().then((u)=>{
+                user=u
+            })
+            .catch(err=>{
+                return res.status(500).json({"error":err.message})
+            })
+        }
+        return res.status(200).json(formatDataSend(user))
+
+    })
+    .catch(err=>{
+        return res.status(500).json({"error":"Failed to authenticte you with google .try with some google account"})
+    })
+
+
+})
 
 
 
