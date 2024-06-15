@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { response } from 'express'
 import mongoose from 'mongoose'
 import 'dotenv/config';
 import bcrypt from 'bcrypt'
@@ -6,11 +6,12 @@ import User from './Shema/User.js';
 import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken'
 import cors from 'cors'//avoid to call  default localhost port number
+import aws from 'aws-sdk';
 
 
-import admin from 'firebase-admin';
-import serviceAccountKey from './myblog-mearn-stack-firebase-adminsdk-cl2ul-9eaf637df1.json' assert { type: "json" };
-import { getAuth } from 'firebase-admin/auth';
+// import admin from 'firebase-admin';
+// import serviceAccount from "./myblog-mern-stack-firebase-adminsdk-1gzt8-a1acee71d1.json" assert { type: "json" }
+// import { getAuth } from 'firebase-admin/auth';
 
 
 
@@ -19,12 +20,9 @@ const server=express();
 let PORT=3000;
 
 //google authentication
-admin.initializeApp({
-    
-    credential:admin.credential.cert(serviceAccountKey)
-
-
-})
+// admin.initializeApp({
+//     credential: admin.credential.cert(serviceAccount)
+//   });
 
 
 
@@ -38,10 +36,53 @@ let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/; // regex for pass
 server.use(express.json());
 server.use(cors())
 
+
+
+
+
 mongoose.connect(process.env.DB_LOCATION,{
     autoIndex:true
     
 })
+
+//S3 bucket
+
+const s3=new aws.S3({
+    region:'eu-north-1',
+    accessKeyId:process.env.AWS_ACCESSS_KEY,
+    secretAccessKey:process.env.AWS_SECRET_ACCESS_KEY
+})
+
+const generateUploadURL=async()=>{
+     
+    const data=new Date();
+    const imageName=`${nanoid()}-${data.getTime()}.jpeg`;
+
+    return await s3.getSignedUrlPromise('putObject',{
+
+        Bucket:'rect-blog',
+        Key: imageName,
+        Expires:1000,
+        ContentType:"image/jpeg"
+    })
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -67,6 +108,27 @@ const formatDataSend=(user)=>{
 
     }
 }
+
+
+
+//upload image url route
+server.get('/get-upload-url',(req,res)=>{
+
+    generateUploadURL().then(url=> res.status(200).json({uploadURL:url}))
+    .catch(err=>{
+        console.log(err.message)
+        return res.status(500).json({error:err.message})
+    })
+})
+
+
+
+
+
+
+
+
+
 
 
 
@@ -161,58 +223,102 @@ server.post("/signin",(req,res)=>{
 
 //google authentiaction
 
-server.post("/google-auth",async (req,res)=>{
+// server.post("/google-auth",async (req,res)=>{
 
-    let {access_token}=req.body;
+//     let {access_token}=req.body;
 
-    getAuth().verifyIdToken(access_token)
-    .then(async(decodeUser)=>{
+//     getAuth().verifyIdToken(access_token)
+//     .then(async(decodeUser)=>{
         
 
-        let {email,name,picture}=decodeUser;
-        picture =picture.replace("s96-c","s384-c")
+//         let {email,name,picture}=decodeUser;
+//         picture =picture.replace("s96-c","s384-c")
         
-        let user=await User.findOne({"personal_info.email":email})
-        .select(
-            "personal_info.fullname personal_info.username personal_info.profile_img google_auth"
-        ).then((u)=>{
-            return u || null
-        })
-        .catch(err=>{
-            return res.status(500).json({"error":err.message})
-        })
-        console.log(user)
-        if(user){//login
-            // if(!user.google_auth){
-            //     return res.status(403).json({"error":"This email was signed up without google.please log in with password to access the account"})
-            // }
-        }else{//signup
+//         let user=await User.findOne({"personal_info.email":email})
+//         .select(
+//             "personal_info.fullname personal_info.username personal_info.profile_img google_auth"
+//         ).then((u)=>{
+//             return u || null
+//         })
+//         .catch(err=>{
+//             return res.status(500).json({"error":err.message})
+//         })
+//         console.log(user)
+//         if(user){//login
+//             if(!user.google_auth){
+//                 return res.status(403).json({"error":"This email was signed up without google.please log in with password to access the account"})
+//             }
+//         }else{//signup
             
-            let username=await generateUsername(email)
+//             let username=await generateUsername(email)
 
-            user=new User({
-                personal_info:{fullname:name ,email,profile_img:picture,username},
-                google_auth:true
-            })
-            await user.save().then((u)=>{
-                user=u
-            })
-            .catch(err=>{
-                return res.status(500).json({"error":err.message})
-            })
+//             user=new User({
+//                 personal_info:{fullname:name ,email,profile_img:picture,username},
+//                 google_auth:true
+//             })
+//             await user.save().then((u)=>{
+//                 user=u
+//             })
+//             .catch(err=>{
+//                 return res.status(500).json({"error":err.message})
+//             })
+//         }
+//         return res.status(200).json(formatDataSend(user))
+
+//     })
+//     .catch(err=>{
+//         return res.status(500).json({"error":"Failed to authenticte you with google .try with some google account"})
+//     })
+
+
+// })
+
+
+
+
+
+const verifyJWT=(req,res,next)=>{
+
+    const authHeader =req.headers['authorization']; // this include authorization='Bearer token'
+    const token =authHeader && authHeader.split(" ")[1];
+    if(token==null){
+        return res.status(401).json({error:'No access token'})
+    }
+    jwt.verify(token,process.env.SECRET_ACCESS_KEY,(err,user)=>{
+        if(err){
+            return res.status(403).json({error:'access token is invalid'})
         }
-        return res.status(200).json(formatDataSend(user))
 
-    })
-    .catch(err=>{
-        return res.status(500).json({"error":"Failed to authenticte you with google .try with some google account"})
+        req.user=user.id
+        next()
     })
 
+}
+
+
+
+server.post("/create-blog",verifyJWT,(req,res)=>{
+    
+    //  verify funtion akedi assigned karnwa user id eka
+    let authorId=req.user ;
+
+    let {title,des,banner,tags,content,draft }=req.body;//destructure from  fronend
+
+    if(!title.length){
+        return res.status(403).json({error:'You must provide a title to publish the blog'})
+    }
+
+    if(!des.length||des.length>200){
+        return res.status(403).json({error:'You must provide blog description under 200 characters'})
+    }
+    if(!banner.length){
+        return res.status(403).json({error:'YOu must provide blog banner to publish it '})
+    }
+    if(content){
+        blocks:[]
+    }
 
 })
-
-
-
 
 
 
