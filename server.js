@@ -314,9 +314,22 @@ server.post("/create-blog",verifyJWT,(req,res)=>{
     if(!banner.length){
         return res.status(403).json({error:'YOu must provide blog banner to publish it '})
     }
-    if(content){
-        blocks:[]
+    if(!content.blocks.length){
+       return res.status(403).json({error:"There must be some blog content to publish it"})
     }
+    if(!tags.length || tags.length>10){
+        return res.status(403).json({error:'Provide tags in order to publish the blog ,Maximum 10'})
+    }
+
+
+    tags=tags.map(tag=>tag.toLowerCase());
+
+    let blogId=title.replace(/[^a-zA-Z0-9]/g, ' ').replace(/\s+/g, "-").trim() + nanoid();
+    console.log(blogId)
+
+    return res.json({status:"done"})
+
+
 
 })
 
