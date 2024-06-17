@@ -7,6 +7,7 @@ import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken'
 import cors from 'cors'//avoid to call  default localhost port number
 import aws from 'aws-sdk';
+import Blog from './Shema/Blog.js';
 
 
 // import admin from 'firebase-admin';
@@ -324,10 +325,34 @@ server.post("/create-blog",verifyJWT,(req,res)=>{
 
     tags=tags.map(tag=>tag.toLowerCase());
 
-    let blogId=title.replace(/[^a-zA-Z0-9]/g, ' ').replace(/\s+/g, "-").trim() + nanoid();
-    console.log(blogId)
+    let blog_id=title.replace(/[^a-zA-Z0-9]/g, ' ').replace(/\s+/g, "-").trim() + nanoid();
+    //console.log(blogId)
 
-    return res.json({status:"done"})
+
+
+
+    let blog=new Blog ({
+        title,des,banner,content,tags,author:authorId,blog_id,draft:Boolean(draft)
+    })
+
+    blog.save().then(blog=>{
+
+        let incrementVal=draft? 0:1
+        Usre.findOneAndUpdate({_id:authorId},{
+            $inc:{"account_info.total_posts":incrementVal},
+            $push:{"blogs":blog_id}})
+            .then(user=>{
+                return res.status(200).json({id:blog.blog_id})
+            })
+            .catch(err=>{
+                return res.status(500).json({error:"Faild to update total posts number"})
+            })
+    })
+    .catch(err=>{
+        return res.status(500).json({error:err.message})
+    })
+
+    //return res.json({status:"done"});
 
 
 
