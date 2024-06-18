@@ -301,7 +301,7 @@ const verifyJWT=(req,res,next)=>{
 server.post("/create-blog",verifyJWT,(req,res)=>{
     
     //  verify funtion akedi assigned karnwa user id eka
-    let authorId=req.user ;
+    let authorId=req.user;
 
     let {title,des,banner,tags,content,draft }=req.body;//destructure from  fronend
 
@@ -337,22 +337,25 @@ server.post("/create-blog",verifyJWT,(req,res)=>{
 
     blog.save().then(blog=>{
 
-        let incrementVal=draft? 0:1
-        Usre.findOneAndUpdate({_id:authorId},{
-            $inc:{"account_info.total_posts":incrementVal},
-            $push:{"blogs":blog_id}})
-            .then(user=>{
+        let incrementVal=draft ? 0:1;
+        //console.log(incrementVal)
+        User.findOneAndUpdate({_id:authorId},
+
+            {
+              $inc:{"account_info.total_posts":incrementVal},
+              $push:{"blogs":blog._id}
+            }
+           
+        ).then(user=>{
                 return res.status(200).json({id:blog.blog_id})
-            })
-            .catch(err=>{
+            }).catch(err=>{
                 return res.status(500).json({error:"Faild to update total posts number"})
             })
-    })
-    .catch(err=>{
+    }).catch(err=>{
         return res.status(500).json({error:err.message})
     })
 
-    //return res.json({status:"done"});
+   // return res.json({status:"done"});
 
 
 
