@@ -18,15 +18,20 @@
 # }
 
  #after get the access token :eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2NTk2YTU2OTEzZWVkMjljZTgzNjFkNyIsImlhdCI6MTcxODQ2NTEzOX0.y8nIsISE1tpkqHRh6IkTC7J6W7hqbal78vM4T2GRP9E
-POST http://localhost:3000/create-blog
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2NTk2YTU2OTEzZWVkMjljZTgzNjFkNyIsImlhdCI6MTcxODcwMTk2MH0.WiIIbUVfzblVgnvb5ecnllKjyNAjJBwKaJ20cVB-BaM
+# POST http://localhost:3000/create-blog
+# Content-Type: application/json
+# Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2NTk2YTU2OTEzZWVkMjljZTgzNjFkNyIsImlhdCI6MTcxODcwMTk2MH0.WiIIbUVfzblVgnvb5ecnllKjyNAjJBwKaJ20cVB-BaM
 
-{
-    "title": "test title isuru sandaruwn",
-    "banner": "https://dfsdgsggsgs.com",
-    "des": "this dfsdgsfgfsgdgf gfg",
-    "content": { "blocks": [1, 2] },
-    "tags": ["tag1", "tag2"]
-}
+# {
+#     "title": "test title isuru sandaruwn",
+#     "banner": "https://dfsdgsggsgs.com",
+#     "des": "this dfsdgsfgfsgdgf gfg",
+#     "content": { "blocks": [1, 2] },
+#     "tags": ["tag1", "tag2"]
+# }
+
+
+
+GET  http://localhost:3000/latest-blogs
+
 
