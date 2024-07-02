@@ -46,10 +46,17 @@
 
 
 
-POST  http://localhost:3000/search-users
+# POST  http://localhost:3000/search-users
+# Content-Type: application/json
+
+# {
+#     "query":"isuru"
+# }
+
+POST  http://localhost:3000/get-profile
 Content-Type: application/json
 
 {
-    "query":"isuru"
+     "username":"isurusandaruwan0601"
 }
 
