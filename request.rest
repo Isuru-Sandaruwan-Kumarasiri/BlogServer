@@ -53,10 +53,18 @@
 #     "query":"isuru"
 # }
 
-POST  http://localhost:3000/get-profile
+# POST  http://localhost:3000/get-profile
+# Content-Type: application/json
+
+# {
+#      "username":"isurusandaruwan0601"
+# }
+
+
+POST  http://localhost:3000/get-blog
 Content-Type: application/json
 
 {
-     "username":"isurusandaruwan0601"
+     "blog_id":"java-Binaray-SearchPkMurcr7sF5JpBCpoxSUl"
 }
 

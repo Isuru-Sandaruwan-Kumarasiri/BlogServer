@@ -336,7 +336,7 @@ server.post("/all-latest-blogs-count",(req,res)=>{
 
 server.post("/search-blogs-count",(req,res)=>{
 
-    let {tag,query}=req.body;
+    let {tag,query,author}=req.body;
 
     // let findQuery={tags:tag,draft:false};
 
@@ -346,6 +346,8 @@ server.post("/search-blogs-count",(req,res)=>{
         findQuery={tags:tag,draft:false};
     }else if(query){
         findQuery={draft:false,title:new RegExp(query,'i')};
+    }else if(author){
+        findQuery={author,draft:false};
     }
 
 
@@ -387,7 +389,7 @@ server.get('/trending-blogs',(req,res)=>{
 
 server.post("/search-blogs",(req,res)=>{
 
-    let {tag,query,page}=req.body;
+    let {tag,query,author,page}=req.body;
 
     let findQuery;
 
@@ -395,6 +397,8 @@ server.post("/search-blogs",(req,res)=>{
         findQuery={tags:tag,draft:false};
     }else if(query){
         findQuery={draft:false,title:new RegExp(query,'i')};
+    }else if(author){
+        findQuery={author,draft:false};
     }
 
     let maxLimit=2;
@@ -527,6 +531,34 @@ server.post("/create-blog",verifyJWT,(req,res)=>{
 
 
 })
+
+
+
+//render blogpage
+
+server.post("/get-blog",(req,res)=>{
+
+    let {blog_id}=req.body;
+
+    let incrementVal=1;
+
+    Blog.findOneAndUpdate({blog_id},{$inc :{"activity.total_reads":incrementVal}})      // blog_id:blog_id //and increased increment value
+    .populate("author"," personal_info.profile_img personal_info.username personal_info.fullname ")
+    .select("blog_id content title des banner activity tags publishedAt -_id")
+    .then(blog=>{
+        
+        User.findOneAndUpdate({"personal_info.username":blog.author.personal_info.username},{$inc:{"account_info.total_reads":incrementVal}})
+        .catch(err=>{
+            return res.status(500).json({error:err.message})
+        })
+
+
+        return res.status(200).json({blog})
+    })
+    .catch(err=>{
+        return res.status(500).json({error:err.message})
+    })
+})  
 
 
 
