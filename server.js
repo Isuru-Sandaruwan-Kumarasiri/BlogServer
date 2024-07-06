@@ -538,9 +538,9 @@ server.post("/create-blog",verifyJWT,(req,res)=>{
 
 server.post("/get-blog",(req,res)=>{
 
-    let {blog_id}=req.body;
+    let {blog_id,draft,mode}=req.body;
 
-    let incrementVal=1;
+    let incrementVal= mode != "edit" ? 1:0 ;
 
     Blog.findOneAndUpdate({blog_id},{$inc :{"activity.total_reads":incrementVal}})      // blog_id:blog_id //and increased increment value
     .populate("author"," personal_info.profile_img personal_info.username personal_info.fullname ")
@@ -551,6 +551,9 @@ server.post("/get-blog",(req,res)=>{
         .catch(err=>{
             return res.status(500).json({error:err.message})
         })
+        if(blog.draft && !draft){
+            return res.status(500).json({error:'you can not access draft blogs'})
+        }
 
 
         return res.status(200).json({blog})
