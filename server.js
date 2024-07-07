@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken'
 import cors from 'cors'//avoid to call  default localhost port number
 import aws from 'aws-sdk';
 import Blog from './Shema/Blog.js';
+import Notification from './Shema/Notification.js';
 
 
 // import admin from 'firebase-admin';
@@ -558,7 +559,7 @@ server.post("/get-blog",(req,res)=>{
 
     Blog.findOneAndUpdate({blog_id},{$inc :{"activity.total_reads":incrementVal}})      // blog_id:blog_id //and increased increment value
     .populate("author"," personal_info.profile_img personal_info.username personal_info.fullname ")
-    .select("blog_id content title des banner activity tags publishedAt -_id")
+    .select("blog_id content title des banner activity tags publishedAt")
     .then(blog=>{
         
         User.findOneAndUpdate({"personal_info.username":blog.author.personal_info.username},{$inc:{"account_info.total_reads":incrementVal}})
@@ -577,6 +578,69 @@ server.post("/get-blog",(req,res)=>{
     })
 })  
 
+
+
+server.post("/like-blog",verifyJWT,(req,res)=>{
+
+
+    
+    let user_id=req.user;
+
+    let { _id,islikeByUser}=req.body;
+
+    let incrementVal= !islikeByUser ? 1:-1;
+
+    Blog.findOneAndUpdate({_id},{$inc:{"activity.total_likes":incrementVal}})
+    .then(blog=>{
+        console.log(blog)
+        if(!islikeByUser){
+           let like=new Notification ({
+                type:"like",
+                blog:_id,
+                notification_for:blog.author,
+                user:user_id
+           })
+
+           like.save().then(notification=>{
+              return res.status(200).json({liked_By_user:true})
+           })
+        }
+    })
+
+
+})
+
+
+// server.post("/like-blog", verifyJWT, (req, res) => {
+//     let user_id = req.user;
+//     let { _id, islikeByUser } = req.body;
+//     let incrementVal = !islikeByUser ? 1 : -1;
+
+//     Blog.findOneAndUpdate({ _id }, { $inc: { " activity.total_likes": incrementVal } }, { new: true })
+//         .then(blog => {
+//             if (!blog) {
+//                 return res.status(404).json({ error: "Blog not found" });
+//             }
+//             if (!islikeByUser) {
+//                 let like = new Notification({
+//                     type: "like",
+//                     blog: _id,
+//                     notification_for: blog.author,
+//                     user: user_id
+//                 });
+
+//                 return like.save().then(notification => {
+//                     return res.status(200).json({ liked_By_user: true });
+//                 });
+//             } else {
+//                 return res.status(200).json({ liked_By_user: false });
+//             }
+//         })
+//         .catch(err => {
+//             console.error(err);
+//             return res.status(500).json({ error: "Internal server error" });
+//         });
+// });
 
 
 
