@@ -664,7 +664,7 @@ server.post("/add-comment",verifyJWT,(req,res)=>{
 
         let {comment,commentedAt,children}=commentFile;
 
-        Blog.findOneAndUpdate({_id},{$push:{"comments":commentFile._id},$inc:{"activity.total_comments":1},"activity.total_parent_comments":1})//blog eka hoyal blog ake comment array akt comment format eka include kirima
+        Blog.findOneAndUpdate({_id},{$push:{"comments":commentFile._id},$inc:{"activity.total_comments":1,"activity.total_parent_comments":1},})//blog eka hoyal blog ake comment array akt comment format eka include kirima
         .then(blog=>{
             console.log("new comment created");
         })
