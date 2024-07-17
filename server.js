@@ -664,12 +664,12 @@ server.post("/add-comment",verifyJWT,(req,res)=>{
         commentObj.parent=replying_to;
     }
 
-    new Comment(commentObj).save().then(commentFile=>{
+    new Comment(commentObj).save().then(async commentFile=>{
 
         let {comment,commentedAt,children}=commentFile;
 
         Blog.findOneAndUpdate({_id},{$push:{"comments":commentFile._id},$inc:{"activity.total_comments":1,"activity.total_parent_comments":replying_to ? 0 :1},})//blog eka hoyal blog ake comment array akt comment format eka include kirima
-        .then(blog=>{
+        .then( blog=>{
             console.log("new comment created");
         })
 
@@ -685,6 +685,13 @@ server.post("/add-comment",verifyJWT,(req,res)=>{
 
         if(replying_to){
             notificationObj.replied_on_comment=replying_to;
+
+            await Comment.findOneAndUpdate({_id:replying_to},{$push :{children :commentFile._id }})
+            .then(replyingTocommentDoc =>{
+                 notificationObj.notification_for=replyingTocommentDoc.commented_by
+            })
+
+            
         }
         new Notification(notificationObj).save().then(notification=>{
             console.log('new notification crated');
