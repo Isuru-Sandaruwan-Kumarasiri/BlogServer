@@ -6,10 +6,11 @@ import User from './Shema/User.js';
 import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken'
 import cors from 'cors'//avoid to call  default localhost port number
-import aws from 'aws-sdk';
+//import aws from 'aws-sdk';
 import Blog from './Shema/Blog.js';
 import Notification from './Shema/Notification.js';
 import Comment from './Shema/Comment.js'
+
 
 
 // import admin from 'firebase-admin';
@@ -50,26 +51,50 @@ mongoose.connect(process.env.DB_LOCATION,{
 
 //S3 bucket
 
-const s3=new aws.S3({
-    region:'eu-north-1',
-    accessKeyId:process.env.AWS_ACCESSS_KEY,
-    secretAccessKey:process.env.AWS_SECRET_ACCESS_KEY
-})
+// const s3=new aws.S3({
+//     region:'eu-north-1',
+//     accessKeyId:process.env.AWS_ACCESSS_KEY,
+//     secretAccessKey:process.env.AWS_SECRET_ACCESS_KEY
+// })
 
-const generateUploadURL=async()=>{
+// const generateUploadURL=async()=>{
      
-    const data=new Date();
-    const imageName=`${nanoid()}-${data.getTime()}.jpeg`;
+//     const data=new Date();
+//     const imageName=`${nanoid()}-${data.getTime()}.jpeg`;
 
-    return await s3.getSignedUrlPromise('putObject',{
+//     return await s3.getSignedUrlPromise('putObject',{
 
-        Bucket:'rect-blog',
-        Key: imageName,
-        Expires:1000,
-        ContentType:"image/jpeg"
-    })
-}
+//         Bucket:'rect-blog',
+//         Key: imageName,
+//         Expires:1000,
+//         ContentType:"image/jpeg"
+//     })
+// }
 
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { fromEnv } from "@aws-sdk/credential-providers";
+
+
+// Create an S3 client
+const s3Client = new S3Client({
+  region: 'eu-north-1',
+  credentials: fromEnv(),
+});
+
+const generateUploadURL = async () => {
+  const data = new Date();
+  const imageName = `${nanoid()}-${data.getTime()}.jpeg`;
+
+  const command = new PutObjectCommand({
+    Bucket: 'rect-blog',
+    Key: imageName,
+    ContentType: "image/jpeg",
+  });
+
+  const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 1000 });
+  return signedUrl;
+};
 
 
 
@@ -681,14 +706,15 @@ server.post("/add-comment",verifyJWT,(req,res)=>{
             comment:commentFile._id
 
 
+
         }
 
         if(replying_to){
             notificationObj.replied_on_comment=replying_to;
 
             await Comment.findOneAndUpdate({_id:replying_to},{$push :{children :commentFile._id }})
-            .then(replyingTocommentDoc =>{
-                 notificationObj.notification_for=replyingTocommentDoc.commented_by
+            .then(replyingToCommentDoc =>{
+                 notificationObj.notification_for=replyingToCommentDoc.commented_by
             })
 
             
