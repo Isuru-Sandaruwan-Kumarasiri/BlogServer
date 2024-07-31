@@ -12,7 +12,7 @@ import Notification from './Shema/Notification.js';
 import Comment from './Shema/Comment.js'
 
 
-
+config();
 // import admin from 'firebase-admin';
 // import serviceAccount from "./myblog-mern-stack-firebase-adminsdk-1gzt8-a1acee71d1.json" assert { type: "json" }
 // import { getAuth } from 'firebase-admin/auth';
@@ -74,7 +74,7 @@ mongoose.connect(process.env.DB_LOCATION,{
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { fromEnv } from "@aws-sdk/credential-providers";
-import { populate } from 'dotenv';
+import { config, populate } from 'dotenv';
 
 
 // Create an S3 client
@@ -688,6 +688,7 @@ server.post("/add-comment",verifyJWT,(req,res)=>{
 
     if(replying_to){
         commentObj.parent=replying_to;
+        commentObj.isReply=true;
     }
 
     new Comment(commentObj).save().then(async commentFile=>{
@@ -786,6 +787,56 @@ server.post("/get-replies",(req,res)=>{
     .catch(err=>{
         return res.status(500).json({replies:err.message})
     })
+})
+
+const deleteComment=(_id)=>{
+
+    Comment.findOne({_id})
+    .then(comment=>{
+
+        if(comment.parent){
+            Comment.findOneAndUpdate({_id:comment.parent},{$pull:{children:_id}})
+            .then(data=>console.log('comment delete from parent'))
+            .catch(err=>console.log(err))
+        }
+
+        Notification.findOneAndDelete({comment:_id}).then(notification =>console.log("comment notification deleted"));
+
+        Notification.findOneAndDelete({reply:_id}).then(notification=>console.log("reply notification deleted"));
+
+        Blog.findOneAndDelete({_id:comment.blog_id},{$pull:{comments:_id},$inc:{"activity.total_comments":-1},"activity.total_parent_comments":comment.parent ?0:-1})
+        .then(blog=>{
+            if(comment.children.length){
+                comment.children.map(replies=>{
+                    deleteComment(replies)
+                })
+            }
+        })
+    })
+    .catch(err=>{
+        console.log(err.message);
+    })
+}
+
+server.post("/delete-comment",verifyJWT,(req,res)=>{
+
+      let user_id=req.user;
+
+      let {_id}=req.body;
+
+      Comment.findOne({_id})
+      .then(comment=>{
+
+         if(user_id==comment.commented_by || user_id==comment.blog_author){
+            
+            deleteComment(_id);
+
+            return res.status(200).json({"status":"done"})
+         }else{
+            return res.status(403).json({"error":"You can not delete this comment"})
+         }
+      })
+
 })
 
 
