@@ -1,6 +1,7 @@
 import express, { response } from 'express'
 import mongoose from 'mongoose'
-import 'dotenv/config';
+// import 'dotenv/config';
+import dotenv from 'dotenv';
 import bcrypt from 'bcrypt'
 import User from './Shema/User.js';
 import { nanoid } from 'nanoid';
@@ -12,7 +13,7 @@ import Notification from './Shema/Notification.js';
 import Comment from './Shema/Comment.js'
 
 
-config();
+dotenv.config();
 // import admin from 'firebase-admin';
 // import serviceAccount from "./myblog-mern-stack-firebase-adminsdk-1gzt8-a1acee71d1.json" assert { type: "json" }
 // import { getAuth } from 'firebase-admin/auth';
@@ -79,9 +80,13 @@ import { config, populate } from 'dotenv';
 
 // Create an S3 client
 const s3Client = new S3Client({
-  region: 'eu-north-1',
-  credentials: fromEnv(),
-});
+    region: 'eu-north-1',
+    credentials: {
+        accessKeyId:process.env.AWS_ACCESSS_KEY,
+       secretAccessKey:process.env.AWS_SECRET_ACCESS_KEY
+    }
+  });
+  
 
 const generateUploadURL = async () => {
   const data = new Date();
@@ -141,7 +146,7 @@ const formatDataSend=(user)=>{
 
 
 //upload image url route
-server.get('/get-upload-url',(req,res)=>{
+server.get("/get-upload-url",(req,res)=>{
 
     generateUploadURL().then(url=> res.status(200).json({uploadURL:url}))
     .catch(err=>{
