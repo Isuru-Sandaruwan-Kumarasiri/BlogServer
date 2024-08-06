@@ -796,7 +796,7 @@ server.post("/get-replies",(req,res)=>{
 
 const deleteComment=(_id)=>{
 
-    Comment.findOne({_id})
+    Comment.findOneAndDelete({_id})
     .then(comment=>{
 
         if(comment.parent){
@@ -809,7 +809,7 @@ const deleteComment=(_id)=>{
 
         Notification.findOneAndDelete({reply:_id}).then(notification=>console.log("reply notification deleted"));
 
-        Blog.findOneAndDelete({_id:comment.blog_id},{$pull:{comments:_id},$inc:{"activity.total_comments":-1},"activity.total_parent_comments":comment.parent ?0:-1})
+        Blog.findOneAndUpdate({_id:comment.blog_id},{$pull:{comments:_id},$inc:{"activity.total_comments":-1},"activity.total_parent_comments":comment.parent ?0:-1})
         .then(blog=>{
             if(comment.children.length){
                 comment.children.map(replies=>{
@@ -835,10 +835,12 @@ server.post("/delete-comment",verifyJWT,(req,res)=>{
          if(user_id==comment.commented_by || user_id==comment.blog_author){
             
             deleteComment(_id);
+            return res.status(200).json({"status":"done"});
 
-            return res.status(200).json({"status":"done"})
          }else{
-            return res.status(403).json({"error":"You can not delete this comment"})
+
+            return res.status(403).json({"error":"You can not delete this comment"});
+
          }
       })
 
