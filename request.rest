@@ -61,10 +61,28 @@
 # }
 
 
-POST  http://localhost:3000/get-blog
+# POST  http://localhost:3000/get-blog
+# Content-Type: application/json
+
+# {
+#      "blog_id":"java-Binaray-SearchPkMurcr7sF5JpBCpoxSUl"
+# }
+
+
+# POST http://localhost:3000/signin
+# Content-Type: application/json
+
+# {
+    
+#     "email":"isurusandaruwan0601@gmail.com",
+#     "password":"Isuru123"
+# }
+
+POST http://localhost:3000/change-password
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2YTljNDA3MWM5Yjk2OTQxNzU3NjY5NyIsImlhdCI6MTcyMzMxMTY2NX0.5kcaz7O7waLVOSGvGMEfnYPgyOrc7o_dkDc6NoXUxLk
 
 {
-     "blog_id":"java-Binaray-SearchPkMurcr7sF5JpBCpoxSUl"
+     "currentPassword":"Isuru123",
+     "newPassword":"Isuru321"
 }
-
