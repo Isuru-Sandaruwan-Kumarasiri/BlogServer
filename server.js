@@ -532,7 +532,19 @@ server.post("/get-profile",(req,res)=>{
 
 
 
+//uploadimg
+server.post("/update-profile-img",verifyJWT,(req,res)=>{
 
+    let {url}=req.body;
+    
+    User.findOneAndUpdate({_id:req.user},{"personal_info.profile_img":url})
+    .then(()=>{
+        return res.status(200).json({profile_img:url})
+    })
+    .catch(err=>{
+        return res.status(500).json({error:err.message})
+    })
+})
 
 
 
