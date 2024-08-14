@@ -545,6 +545,27 @@ server.post("/update-profile-img",verifyJWT,(req,res)=>{
         return res.status(500).json({error:err.message})
     })
 })
+//update profile 
+server.post("/update-profile",verifyJWT,(req,res)=>{
+
+    let {username,bio,social_links}=req.body;
+
+    let bioLimit=150;
+
+    if(username.length<3){
+        return res.status(403).json({error:"Username should be at least loang"})
+    }
+    if(bioLimit<bio.length){
+        return res.status(403).json({error:`Bio should not be more than ${bioLimit}`})
+    }
+
+    let socialLinksArr=Object.keys(social_links);
+    try {
+        
+    } catch (error) {
+        return res.status(500).json({error:`You must provide full social links with http(s) included`})
+    }
+})
 
 
 
