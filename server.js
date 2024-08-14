@@ -561,10 +561,37 @@ server.post("/update-profile",verifyJWT,(req,res)=>{
 
     let socialLinksArr=Object.keys(social_links);
     try {
+
+        for(let i=0;i<socialLinksArr.length;i++){
+            if(social_links[socialLinksArr[i]].length){
+                let hostname=new URL(social_links[socialLinksArr[i]]).hostname;
+
+                if(!hostname.includes(`${socialLinksArr[i]}.com`) &&  socialLinksArr[i] !='website'){
+                    return res.status(403).json({error :`${socialLinksArr[i]} link is invalid .You must enter a full links`})
+                }
+            }
+        }
         
     } catch (error) {
         return res.status(500).json({error:`You must provide full social links with http(s) included`})
     }
+
+    let UpdateObj={
+       
+        "personal_info.username":username,
+        "personal_info.bio":bio,
+        social_links
+    }
+    User.findOneAndUpdate({_id:req.user},UpdateObj,{runValidators :true})
+    .then(()=>{
+        return res.status(200).json({username})
+    })
+    .catch(err =>{
+        if(err.code ==11000){
+            return res.status(409).json({error :"username is already taken"})
+        }
+        return res.status(500).json({error :err.message})
+    })
 })
 
 
