@@ -78,11 +78,18 @@
 #     "password":"Isuru123"
 # }
 
-POST http://localhost:3000/change-password
-Content-Type: application/json
+# POST http://localhost:3000/change-password
+# Content-Type: application/json
+# Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2YTljNDA3MWM5Yjk2OTQxNzU3NjY5NyIsImlhdCI6MTcyMzMxMTY2NX0.5kcaz7O7waLVOSGvGMEfnYPgyOrc7o_dkDc6NoXUxLk
+
+# {
+#      "currentPassword":"Isuru123",
+#      "newPassword":"Isuru321"
+# }
+GET http://localhost:3000/new-notification
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2YTljNDA3MWM5Yjk2OTQxNzU3NjY5NyIsImlhdCI6MTcyMzMxMTY2NX0.5kcaz7O7waLVOSGvGMEfnYPgyOrc7o_dkDc6NoXUxLk
 
-{
-     "currentPassword":"Isuru123",
-     "newPassword":"Isuru321"
-}
+# {
+#      "currentPassword":"Isuru123",
+#      "newPassword":"Isuru321"
+# }
