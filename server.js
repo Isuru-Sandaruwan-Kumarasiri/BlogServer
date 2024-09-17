@@ -974,6 +974,19 @@ server.get("/new-notification",verifyJWT,(req,res)=>{
     
 })
 
+server.post("/notifications",verifyJWT,(req,res)=>{
+
+    let user_id=req.id;
+    let {page,filter,deletedDocCount}=req.body;
+
+    let maxLimit=10;
+
+    let findQuery={notification_for:user_id,user:{$ne:user_id}};
+
+
+
+})
+
 
 
 server.listen(PORT,()=>{
