@@ -976,7 +976,7 @@ server.get("/new-notification",verifyJWT,(req,res)=>{
 
 server.post("/notifications",verifyJWT,(req,res)=>{
 
-    let user_id=req.id;
+    let user_id=req.user;
     let {page,filter,deletedDocCount}=req.body;
 
     let maxLimit=10;
@@ -1003,8 +1003,8 @@ server.post("/notifications",verifyJWT,(req,res)=>{
     .populate("reply","comment")
     .sort({createdAt :-1})
     .select("createdAt type seen reply")
-    .then(notification =>{
-        return res.status(200).json({notification});
+    .then(notifications =>{
+        return res.status(200).json({notifications});
     })
     .catch(err=>{
         console.log(err.message)
@@ -1015,7 +1015,7 @@ server.post("/notifications",verifyJWT,(req,res)=>{
 
 
 })
-server.post("/notifications",verifyJWT,(req,res)=>{
+server.post("/all-notifications-count",verifyJWT,(req,res)=>{
 
     let user_id=req.user;
     let {filter}=req.body;
